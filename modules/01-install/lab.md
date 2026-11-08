@@ -1,6 +1,6 @@
 # Module 1B: Install the platform (60 min)
 
-[Workshop home](../../README.md) · Next: [Module 2: Context and Memory](../02-mcp-rag/lab.md)
+Previous: [Architecture](../../docs/architecture.md) · [Workshop home](../../README.md) · Next: [Module 2: Context and Memory](../02-mcp-rag/lab.md)
 
 You will build the whole stack with one command, then prove it works with a smoke-test prompt.
 
@@ -69,6 +69,7 @@ A reply means the whole chain works: browser -> CAIPE -> your endpoint -> model.
 | Symptom | Fix |
 |---|---|
 | `up.sh` stops at pre-flight | Read the lines marked `x`: each one says how to fix it (`docs/platform-setup.md`) |
+| `up.sh` fails in `runbooks.sh`, or Module 2's runbook search finds nothing | Your endpoint probably does not serve `text-embedding-3-small`: run the embeddings test call in `docs/attendee-prerequisites.md`, fix the endpoint, then `./bootstrap/runbooks.sh` |
 | Login says invalid username or password | Re-copy the password (see above); if Keycloak restarted its users are gone: `./bootstrap/users.sh` |
 | Pods stuck `ContainerCreating` for minutes | Slow image pulls: wait, or `./bootstrap/prepull.sh --load images.tar` |
 | Smoke test fails with a 400 about the model | Your endpoint does not serve that model or it rejects `temperature=1` (default is `claude-5.5-haiku`); check the name with `curl $LITELLM_URL/models -H "Authorization: Bearer $LITELLM_API_KEY"`, then `LITELLM_MODEL=<name> ./bootstrap/up.sh` |
@@ -77,4 +78,4 @@ A reply means the whole chain works: browser -> CAIPE -> your endpoint -> model.
 
 ---
 
-[Workshop home](../../README.md) · Next: [Module 2: Context and Memory](../02-mcp-rag/lab.md)
+Previous: [Architecture](../../docs/architecture.md) · [Workshop home](../../README.md) · Next: [Module 2: Context and Memory](../02-mcp-rag/lab.md)

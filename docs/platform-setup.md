@@ -13,7 +13,7 @@ After installing the tools, one command tells you whether you are ready (and wha
 | Platform | Status |
 |---|---|
 | macOS arm64 (Apple silicon), Colima or Docker Desktop | **Tested end to end**: fresh install, all five labs, `smoke.sh --guardrails` (Colima, 6 CPU, 12.5 GB). |
-| Linux amd64 | **Partly verified.** All 33 registry images have `linux/amd64` (the 34th, `workshop/mcp-base`, is built locally); the install commands below run on amd64; `preflight.sh` runs on amd64 Ubuntu 24.04. A full cluster run is done by the `linux-amd64` GitHub workflow (see "Sign-off"). |
+| Linux amd64 | **Partly verified.** All 33 registry images have `linux/amd64` (the 34th, `workshop/mcp-base`, is built locally); the install commands below run on amd64; `preflight.sh` runs on amd64 Ubuntu 24.04. A full cluster run is done by the `linux-amd64` GitHub workflow. |
 | macOS Intel | Same images and scripts as Linux amd64; **not tested** on hardware. |
 | Windows 10/11 with WSL2 (Ubuntu) | **Documented, not tested.** It is Linux amd64 inside a VM; the risks are memory, Windows-side name resolution and line endings, handled below. |
 | Linux arm64, Windows on ARM (WSL2) | Images are multi-arch; **not tested**. |
@@ -90,27 +90,9 @@ echo '127.0.0.1 gitea.caipe.localtest.me argocd.caipe.localtest.me' | sudo tee -
 |---|---|
 | Mac or Linux laptop, 16 GB+, admin rights | Steps above, then `preflight.sh`, then Module 1. |
 | Windows laptop | WSL2 section. Ask them to run the WSL steps **before** the day; it needs a reboot and admin rights. |
-| No admin rights (cannot install Docker, edit hosts, set `.wslconfig`) | Cannot run the stack locally. **Open decision**: facilitator provides a shared cloud VM or a pair-up with a neighbour (see PLAN section 7). |
+| No admin rights (cannot install Docker, edit hosts, set `.wslconfig`) | Cannot run the stack locally. Tell the organiser before the day: they arrange a pair-up with a neighbour or another fallback. |
 | 8 GB RAM, or a laptop that cannot give Docker 12 GB | Same as above; do not attempt it, a half-starved stack fails in confusing ways. |
 | Corporate proxy / restricted network | Set the proxy on the **Docker daemon** too (Docker Desktop > Resources > Proxies, or a systemd drop-in on Linux) and `export NO_PROXY=localhost,127.0.0.1,.localtest.me,.svc,.cluster.local`. Untested here. If `ghcr.io` is blocked: load the pre-pull tarball. |
 | Slow or no internet at the venue | `./bootstrap/prepull.sh` 48 h ahead, or `./bootstrap/prepull.sh --load images.tar` from a USB stick. **The tarball is per CPU type**: build one on an arm64 machine and one on amd64 (`--save`). |
 | Apple silicon / Intel Mac / Linux / WSL2 mix in one room | Fine: images are multi-arch and pinned by digest; only the tarball differs. |
 | Podman or Rancher Desktop | Best effort, not supported. Switch to Docker Desktop, Colima or Docker Engine. |
-
-## Sign-off per platform (run once per platform, record the result)
-
-```bash
-./bootstrap/preflight.sh
-LITELLM_URL=https://<host>/v1 LITELLM_API_KEY=<key> ./bootstrap/up.sh     # note the time
-LITELLM_URL=... LITELLM_API_KEY=... ./bootstrap/smoke.sh --guardrails     # headless checks, no browser
-# then the UI smoke test from modules/01-install/lab.md section 5, and ./bootstrap/down.sh
-```
-
-Linux amd64 can be signed off without a machine: GitHub > Actions > **linux-amd64** > Run workflow (needs the `LITELLM_URL` and `LITELLM_API_KEY` repository secrets and a runner with 16 GB RAM; set the repository variable `E2E_RUNNER` to a larger runner label if `ubuntu-latest` has less).
-
-| Platform | Date | Result | up.sh time |
-|---|---|---|---|
-| macOS arm64 (Colima, 6 CPU / 12.5 GB) | 2026-11-05 | pass, all labs | 686 s cold (no pre-pull), 54 s re-run |
-| Linux amd64 | pending | | |
-| Windows 11 + WSL2 | pending | | |
-| macOS Intel | pending | | |

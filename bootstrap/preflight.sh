@@ -117,8 +117,12 @@ if [ -n "${LITELLM_URL:-}" ] && [ -n "${LITELLM_API_KEY:-}" ]; then
   tmp=$(mktemp)
   code=$(curl -s -m 15 -o "$tmp" -w '%{http_code}' -H "Authorization: Bearer $LITELLM_API_KEY" "${LITELLM_URL%/}/models")
   if [ "$code" != 200 ]; then bad "model proxy answered HTTP $code on ${LITELLM_URL%/}/models (URL must end in /v1; check the key)"
-  elif python3 -c "import sys,json;sys.exit(0 if '$want' in [m['id'] for m in json.load(open('$tmp'))['data']] else 1)"; then ok "model proxy serves $want"
-  else bad "model proxy does not serve '$want'; ask the facilitator for the right LITELLM_MODEL"; fi
+  else
+    for m in "$want" text-embedding-3-small; do # the embeddings model is fixed in platform/caipe/rag.yaml (runbook search)
+      if python3 -c "import sys,json;sys.exit(0 if '$m' in [x['id'] for x in json.load(open('$tmp'))['data']] else 1)"; then ok "model proxy serves $m"
+      else bad "model proxy does not serve '$m' (docs/attendee-prerequisites.md)"; fi
+    done
+  fi
   rm -f "$tmp"
 else
   warn "LITELLM_URL / LITELLM_API_KEY not set (up.sh needs them; set them to also check the model here)"

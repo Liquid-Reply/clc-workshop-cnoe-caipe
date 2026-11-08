@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -36,8 +37,11 @@ def open_pull_request(path: str, old_text: str, new_text: str, title: str, descr
     """Propose a change as a pull request against the workload repo. Never merges.
     Edit: replace old_text (must occur exactly once) with new_text in an existing file.
     Create: leave old_text empty and put the whole file in new_text; only allowed under 'environments/' (e.g. environments/team-payments.yaml).
-    Set reviewed_and_approved=true ONLY after the human user has seen the exact change and said yes; with false this is a dry run that returns the diff."""
+    Never write reviewed_and_approved: true into a file: the human reviewer flips that field in the PR.
+    Set the reviewed_and_approved argument to true ONLY after the human user has seen the exact change and said yes; with false this is a dry run that returns the diff."""
     create = old_text == ""
+    if re.search(r"reviewed_and_approved:\s*true", new_text, re.IGNORECASE):
+        return "refused: only the human reviewer may set reviewed_and_approved: true in a file; propose it as false"
     if create:
         if not path.startswith("environments/") or ".." in path:
             return "refused: new files may only be created under environments/"
@@ -58,8 +62,10 @@ def open_pull_request(path: str, old_text: str, new_text: str, title: str, descr
     api("POST", f"/repos/{REPO}/branches", {"new_branch_name": branch, "old_branch_name": "main"})
     body = {"branch": branch, "message": title, "content": base64.b64encode((new_text if create else text.replace(old_text, new_text)).encode()).decode()}
     api("POST" if create else "PUT", f"/repos/{REPO}/contents/{path}", body if create else {**body, "sha": cur["sha"]})
-    pr = api("POST", f"/repos/{REPO}/pulls", {"head": branch, "base": "main", "title": title, "body": description})
-    return f"opened PR #{pr['number']}: {WEB}/{REPO}/pulls/{pr['number']} (a human must review and merge it)"
+    # the model forgets to tell the reviewer about the flag (seen in rehearsal), so the tool says it every time
+    note = "\n\nReviewer: Crossplane builds nothing until reviewed_and_approved is true in this file. Set it on this PR's branch BEFORE merging." if create else ""
+    pr = api("POST", f"/repos/{REPO}/pulls", {"head": branch, "base": "main", "title": title, "body": description + note})
+    return f"opened PR #{pr['number']}: {WEB}/{REPO}/pulls/{pr['number']} (a human must review and merge it){note}"
 
 
 if __name__ == "__main__":

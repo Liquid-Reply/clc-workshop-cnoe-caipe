@@ -82,12 +82,12 @@ jobs:
           echo "${KUBECONFORM_SHA256}  kubeconform.tgz" | sha256sum -c -
           tar -xzf kubeconform.tgz -C /usr/local/bin kubeconform
           rm kubeconform.tgz
-      # Helm values and kustomization files are not Kubernetes objects. CRD-backed
+      # Helm values, kustomization files and the LiteLLM config are not Kubernetes objects. CRD-backed
       # kinds (Crossplane, Karpenter, Argo CD) have no built-in schema and are skipped.
       - name: Validate manifests
         run: |
           git ls-files -z '*.yaml' '*.yml' \
-            ':!:**/kustomization.yaml' ':!:**/values.yaml' ':!:platform/caipe/*' ':!:.github/**' \
+            ':!:**/kustomization.yaml' ':!:**/values.yaml' ':!:platform/caipe/*' ':!:.github/**' ':!:docs/litellm-local.yaml' \
             | xargs -0 kubeconform -strict -summary -ignore-missing-schemas
 
   # The only required status check on main. Add new jobs to `needs` so they gate merges.

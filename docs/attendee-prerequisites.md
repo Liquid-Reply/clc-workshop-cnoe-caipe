@@ -31,29 +31,53 @@ macOS on Apple silicon is tested end to end; other platforms use the same multi-
 
 ## AI provider: bring your own (BYOP)
 
-Attendees bring their own model access, and the model must accept `temperature=1`: `up.sh` makes CAIPE send it (`OPENAI_TEMPERATURE=1`), because Claude 5.x rejects CAIPE's default of 0. The only model verified end to end is `claude-5.5-haiku`.
+Attendees bring their own model access, and the model must accept `temperature=1`: `up.sh` makes CAIPE send it (`OPENAI_TEMPERATURE=1`), because Claude 5.x rejects CAIPE's default of 0. Verified end to end (all five modules): `claude-5.5-haiku` (the default) and `claude-haiku-4-5`.
 
 | You need | Detail |
 | --- | --- |
 | Endpoint | An OpenAI-compatible Chat Completions API; base URL ending in `/v1`, set as `LITELLM_URL` |
 | API key | For that endpoint, set as `LITELLM_API_KEY` |
 | Model | Supports tool calling and accepts `temperature=1`, set as `LITELLM_MODEL` (default `claude-5.5-haiku`) |
+| Embeddings model | The same endpoint must also serve `text-embedding-3-small` under exactly that name (runbook search in Module 2) |
 | Budget | Usage is billed to the attendee's own account; set a spend limit |
 
 - **Tested path:** a LiteLLM proxy (your own or your company's) in front of Anthropic, serving `claude-5.5-haiku`.
+- **The model name depends on your endpoint:** `claude-5.5-haiku` is the name on the proxy we tested; Anthropic's own ID is `claude-haiku-5-5`, and your proxy may use either or a name of its own. List the names with `curl -s "$LITELLM_URL/models" -H "Authorization: Bearer $LITELLM_API_KEY"` and set `LITELLM_MODEL` to the one it shows.
 - **Other OpenAI-compatible endpoints** (OpenAI, other providers, a local model server): may work, not tested. A local model also competes for the laptop's RAM.
-- **A native, non-OpenAI API key alone does not work:** CAIPE talks the OpenAI API format only; put a LiteLLM proxy in front of it.
+- **A native, non-OpenAI API key alone does not work:** CAIPE talks the OpenAI API format only; put a LiteLLM proxy in front of it (see [No proxy yet?](#no-proxy-yet-run-litellm-on-your-laptop) below).
 - **What is sent:** chat prompts plus what the agents read from the local cluster (metrics, logs and runbooks of a sample app) go to the attendee's provider. Follow your employer's AI policy.
 
-Test the provider at home, before the day. A reply containing `choices` means the model accepts `temperature=1`:
+Test the provider at home, before the day. A reply containing `choices` means the model accepts `temperature=1`; a reply containing `embedding` means the embeddings model works:
 
 ```bash
 export LITELLM_URL=https://<your-endpoint>/v1 LITELLM_API_KEY=<your-key> LITELLM_MODEL=claude-5.5-haiku
 curl -s "$LITELLM_URL/chat/completions" -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
   -d "{\"model\":\"$LITELLM_MODEL\",\"temperature\":1,\"max_tokens\":16,\"messages\":[{\"role\":\"user\",\"content\":\"Say ok\"}]}"
+curl -s "$LITELLM_URL/embeddings" -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"model":"text-embedding-3-small","input":"ok"}' | head -c 200
 ```
 
-With the three variables set, `./bootstrap/preflight.sh` also checks that the endpoint lists the model.
+With the three variables set, `./bootstrap/preflight.sh` also checks that the endpoint lists both models.
+
+### No proxy yet? Run LiteLLM on your laptop
+
+If you have an Anthropic API key and an OpenAI API key (for embeddings only; the whole day costs cents) but no
+OpenAI-compatible endpoint, run [LiteLLM](https://docs.litellm.ai/) next to the cluster with the config in
+[`docs/litellm-local.yaml`](litellm-local.yaml). It joins the `kind` Docker network, so the cluster reaches it by the
+name `litellm`; the hosts line makes the same name work on your laptop (for `preflight.sh` and the test calls above).
+
+```bash
+docker network create kind 2>/dev/null || true      # kind reuses this network when up.sh creates the cluster
+docker run -d --name litellm --restart unless-stopped --network kind -p 127.0.0.1:4000:4000 \
+  -v "$PWD/docs/litellm-local.yaml:/app/config.yaml:ro" \
+  -e ANTHROPIC_API_KEY=<your-anthropic-key> -e OPENAI_API_KEY=<your-openai-key> -e LITELLM_MASTER_KEY=sk-workshop \
+  docker.io/litellm/litellm:v1.83.14-stable.patch.3 --config /app/config.yaml
+echo '127.0.0.1 litellm' | sudo tee -a /etc/hosts
+export LITELLM_URL=http://litellm:4000/v1 LITELLM_API_KEY=sk-workshop LITELLM_MODEL=claude-5.5-haiku
+```
+
+Then run the two test calls above. Run the commands from the repository root (the volume path is relative). The
+container restarts with Docker; `./bootstrap/down.sh` does not remove it (`docker rm -f litellm` does).
 
 ## Before the day
 
@@ -63,7 +87,7 @@ Do all of this at home or in the office, at least 48 hours before the workshop: 
 - [ ] **Windows only:** WSL2 with Ubuntu set up (needs admin rights and a reboot), WSL memory raised to 14 GB, and everything done inside the Ubuntu terminal.
 - [ ] **Tools** on the PATH: `kind` (v0.33.0), `kubectl`, `helm`, `git`, plus `curl`, `openssl` and `python3`, which most systems already have.
 - [ ] **Linux only:** inotify limits raised, as described in the setup guide.
-- [ ] **LLM provider:** endpoint, key and model ready, a spend limit set, and the test call from the AI provider section returns `choices`.
+- [ ] **LLM provider:** endpoint, key, chat model and embeddings model ready, a spend limit set, and both test calls from the AI provider section succeed.
 - [ ] **Repository** cloned.
 - [ ] **Readiness check:** `./bootstrap/preflight.sh` ends with `Ready.`. If it says `gitea.caipe.localtest.me` does not resolve, add the hosts line it prints.
 - [ ] **Optional:** `docker login` with a free Docker Hub account, to avoid anonymous pull limits during the download.

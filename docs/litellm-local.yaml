@@ -1,0 +1,11 @@
+# Local LiteLLM proxy for attendees without an OpenAI-compatible endpoint (docs/attendee-prerequisites.md).
+# Serves the two model names the workshop calls: the chat model (CAIPE agents) and the embeddings model (runbook RAG).
+model_list:
+  - model_name: claude-5.5-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY

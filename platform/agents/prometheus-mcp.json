@@ -1,0 +1,14 @@
+{
+  "_id": "prometheus-mcp",
+  "name": "Prometheus (workshop)",
+  "description": "Read-only Prometheus and Kubernetes state, served by apps/prometheus-mcp",
+  "transport": "http",
+  "endpoint": "http://caipe-agentgateway:4000/mcp/prometheus-mcp",
+  "enabled": true,
+  "config_driven": false,
+  "source": "agentgateway",
+  "agentgateway_discovered": false,
+  "agentgateway_endpoint": "http://caipe-agentgateway:4000/mcp/prometheus-mcp",
+  "agentgateway_target_endpoint": "http://prometheus-mcp.mcp-servers.svc.cluster.local:8000/mcp",
+  "credential_sources": [{"kind": "caller_token", "name": "X-CAIPE-Provider-Token", "target": "header", "fallback_client_credentials": true}]
+}

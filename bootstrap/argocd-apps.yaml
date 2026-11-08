@@ -1,0 +1,70 @@
+# ArgoCD Applications for the workshop workload repo (giteaAdmin/workload, populated by apps.sh from apps/).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://my-gitea-http.gitea.svc.cluster.local:3000/giteaAdmin/workload.git
+    targetRevision: main
+    path: observability
+  destination: {server: "https://kubernetes.default.svc"}
+  syncPolicy: {automated: {prune: true, selfHeal: true}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://my-gitea-http.gitea.svc.cluster.local:3000/giteaAdmin/workload.git
+    targetRevision: main
+    path: sample-app
+  destination: {server: "https://kubernetes.default.svc"}
+  syncPolicy: {automated: {prune: true, selfHeal: true}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-mcp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://my-gitea-http.gitea.svc.cluster.local:3000/giteaAdmin/workload.git
+    targetRevision: main
+    path: prometheus-mcp
+  destination: {server: "https://kubernetes.default.svc"}
+  syncPolicy: {automated: {prune: true, selfHeal: true}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea-mcp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://my-gitea-http.gitea.svc.cluster.local:3000/giteaAdmin/workload.git
+    targetRevision: main
+    path: gitea-mcp
+  destination: {server: "https://kubernetes.default.svc"}
+  syncPolicy: {automated: {prune: true, selfHeal: true}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: environments
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://my-gitea-http.gitea.svc.cluster.local:3000/giteaAdmin/workload.git
+    targetRevision: main
+    path: environments
+  destination: {server: "https://kubernetes.default.svc"}
+  syncPolicy: {automated: {prune: true, selfHeal: true}}

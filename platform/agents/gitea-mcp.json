@@ -1,0 +1,14 @@
+{
+  "_id": "gitea-mcp",
+  "name": "Gitea (workshop)",
+  "description": "Read files and open pull requests in the workload repo. Cannot merge, served by apps/gitea-mcp",
+  "transport": "http",
+  "endpoint": "http://caipe-agentgateway:4000/mcp/gitea-mcp",
+  "enabled": true,
+  "config_driven": false,
+  "source": "agentgateway",
+  "agentgateway_discovered": false,
+  "agentgateway_endpoint": "http://caipe-agentgateway:4000/mcp/gitea-mcp",
+  "agentgateway_target_endpoint": "http://gitea-mcp.mcp-servers.svc.cluster.local:8000/mcp",
+  "credential_sources": [{"kind": "caller_token", "name": "X-CAIPE-Provider-Token", "target": "header", "fallback_client_credentials": true}]
+}

@@ -1,0 +1,28 @@
+# Gitea (upstream chart) for the laptop: SQLite and in-memory cache/session, no Postgres or Valkey.
+# Release name my-gitea gives the in-cluster URL http://my-gitea-http.gitea.svc.cluster.local:3000 used by ArgoCD and the MCP server.
+gitea:
+  admin:
+    existingSecret: gitea-credential # created by up.sh: username giteaAdmin, random password
+    email: gitea@caipe.localtest.me
+    passwordMode: keepUpdated
+  config:
+    server:
+      DOMAIN: gitea.caipe.localtest.me
+      ROOT_URL: https://gitea.caipe.localtest.me:8443/
+      START_SSH_SERVER: false
+    database:
+      DB_TYPE: sqlite3
+    cache:
+      ADAPTER: memory
+    session:
+      PROVIDER: memory
+    queue:
+      TYPE: level
+    indexer:
+      ISSUE_INDEXER_TYPE: db
+postgresql-ha:
+  enabled: false
+valkey-cluster:
+  enabled: false
+persistence:
+  size: 5Gi

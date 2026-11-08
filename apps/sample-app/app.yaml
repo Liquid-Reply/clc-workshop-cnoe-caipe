@@ -1,0 +1,93 @@
+# Workshop incident: `shop-api` burns ~20 ms of CPU per request but is limited to 100m, and `loadgen` sends ~8 req/s,
+# so the container is throttled in nearly every period. The fix is a PR raising resources.limits.cpu.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample-app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scripts
+  namespace: sample-app
+data:
+  server.py: |
+    import time
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    class H(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path != "/healthz":
+                end = time.process_time() + 0.02
+                while time.process_time() < end:
+                    pass
+            self.send_response(200); self.end_headers(); self.wfile.write(b"ok\n")
+        def log_message(self, *a):
+            pass
+
+    ThreadingHTTPServer(("", 8080), H).serve_forever()
+  loadgen.py: |
+    import time, urllib.request
+    while True:
+        try:
+            urllib.request.urlopen("http://shop-api:8080/", timeout=5).read()
+        except Exception:
+            time.sleep(1)
+        time.sleep(0.1)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-api
+  namespace: sample-app
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: shop-api}}
+  template:
+    metadata:
+      labels: {app: shop-api}
+    spec:
+      containers:
+        - name: app
+          image: docker.io/library/python:3.13-alpine
+          command: [python, /scripts/server.py]
+          ports: [{containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /healthz, port: 8080}}
+          volumeMounts: [{name: scripts, mountPath: /scripts}]
+          resources:
+            requests: {cpu: 50m, memory: 32Mi}
+            limits: {cpu: 100m, memory: 128Mi}
+      volumes:
+        - {name: scripts, configMap: {name: scripts}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shop-api
+  namespace: sample-app
+spec:
+  selector: {app: shop-api}
+  ports: [{port: 8080}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen
+  namespace: sample-app
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: loadgen}}
+  template:
+    metadata:
+      labels: {app: loadgen}
+    spec:
+      containers:
+        - name: loadgen
+          image: docker.io/library/python:3.13-alpine
+          command: [python, /scripts/loadgen.py]
+          volumeMounts: [{name: scripts, mountPath: /scripts}]
+          resources:
+            requests: {cpu: 20m, memory: 32Mi}
+            limits: {cpu: 200m, memory: 64Mi}
+      volumes:
+        - {name: scripts, configMap: {name: scripts}}

@@ -1,0 +1,10 @@
+# Windows checkouts (core.autocrlf=true) would turn these into CRLF and break them inside WSL/Linux/containers.
+*.sh        text eol=lf
+*.py        text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.env       text eol=lf
+Dockerfile  text eol=lf
+images.lock text eol=lf

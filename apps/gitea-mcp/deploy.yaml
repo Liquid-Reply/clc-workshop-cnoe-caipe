@@ -1,0 +1,31 @@
+# namespace mcp-servers comes from prometheus-mcp; token secret gitea-mcp-token is created by bootstrap/gitea-bot.sh
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: gitea-mcp, namespace: mcp-servers}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: gitea-mcp}}
+  template:
+    metadata: {labels: {app: gitea-mcp}}
+    spec:
+      containers:
+        - name: server
+          image: workshop/mcp-base:1
+          imagePullPolicy: IfNotPresent
+          command: [python, /app/server.py]
+          ports: [{containerPort: 8000}]
+          readinessProbe: {tcpSocket: {port: 8000}}
+          volumeMounts:
+            - {name: code, mountPath: /app}
+            - {name: token, mountPath: /var/run/gitea, readOnly: true}
+          resources: {requests: {cpu: 20m, memory: 64Mi}, limits: {memory: 256Mi}}
+      volumes:
+        - {name: code, configMap: {name: gitea-mcp-code}}
+        - {name: token, secret: {secretName: gitea-mcp-token}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: gitea-mcp, namespace: mcp-servers}
+spec:
+  selector: {app: gitea-mcp}
+  ports: [{port: 8000}]

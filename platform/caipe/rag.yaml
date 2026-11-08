@@ -1,0 +1,36 @@
+# RAG stack slimmed for a laptop: standalone Milvus, 1 etcd, 1 small MinIO; no graph RAG, ingestors or ontology agent.
+# Documents are ingested through rag-server's REST API (bootstrap/runbooks.sh).
+tags: {rag-stack: true}
+global: {rag: {enableGraphRag: false}}
+rag-stack:
+  agent-rag: {enabled: false}
+  agent-ontology: {enabled: false}
+  neo4j: {enabled: false}
+  rag-ingestors: {enabled: false}
+  rag-server:
+    enableGraphRag: false
+    env:
+      EMBEDDINGS_PROVIDER: openai
+      EMBEDDINGS_MODEL: text-embedding-3-small
+      # human (user JWT) validation for the /mcp endpoint; audience is what the CAIPE user tokens carry
+      OIDC_ISSUER: "http://localhost:7080/realms/caipe"
+      OIDC_AUDIENCE: "caipe-platform"
+      OIDC_DISCOVERY_URL: "http://caipe-keycloak:8080/realms/caipe" # issuer (localhost:7080) is not reachable from inside the pod
+      INGESTOR_OIDC_ISSUER: "http://localhost:7080/realms/caipe" # same issuer string as the other CAIPE services (KC_HOSTNAME)
+  milvus:
+    cluster: {enabled: false}
+    standalone:
+      resources: {requests: {cpu: 100m, memory: 512Mi}, limits: {memory: 1536Mi}}
+    minio:
+      mode: standalone
+      # minio/minio left Docker Hub and Quay; pgsty/minio is the maintained fork
+      # a fixed tag, not latest, so images.lock and the running image cannot drift apart
+      image: {repository: docker.io/pgsty/minio, tag: RELEASE.2026-08-04T00-00-00Z}
+      resources: {requests: {memory: 256Mi}}
+      persistence: {size: 5Gi}
+    etcd:
+      replicaCount: 1
+      persistence: {size: 2Gi}
+caipe-ui:
+  config:
+    RAG_SERVER_URL: "http://rag-server:9446" # some UI routes fall back to localhost:9446 without it

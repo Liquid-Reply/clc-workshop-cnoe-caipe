@@ -1,0 +1,5 @@
+# Seed environment. Agents add more of these through pull requests (Module 3).
+apiVersion: platform.workshop.io/v1alpha1
+kind: TeamEnvironment
+metadata: {name: checkout}
+spec: {team: checkout, tier: small, reviewed_and_approved: true}

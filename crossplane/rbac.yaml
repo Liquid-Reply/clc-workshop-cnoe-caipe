@@ -1,0 +1,8 @@
+# lets Crossplane create what the composition renders
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crossplane-team-environments
+  labels: {rbac.crossplane.io/aggregate-to-crossplane: "true"}
+rules:
+  - {apiGroups: [""], resources: [namespaces, resourcequotas, limitranges], verbs: ["*"]}

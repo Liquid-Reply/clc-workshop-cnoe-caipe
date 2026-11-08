@@ -1,0 +1,27 @@
+# Cluster-scoped XR: Crossplane v2 namespaced XRs cannot compose a Namespace. Instances live in Git (workload/environments), not in the cluster by hand.
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata: {name: teamenvironments.platform.workshop.io}
+spec:
+  scope: Cluster
+  group: platform.workshop.io
+  names: {kind: TeamEnvironment, plural: teamenvironments}
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [team]
+              properties:
+                team: {type: string, pattern: "^[a-z][a-z0-9-]{1,20}$", description: "DNS-safe team name; the namespace is team-<team>"}
+                tier: {type: string, enum: [small, medium, large], default: small, description: "Resource quota size"}
+                reviewed_and_approved: {type: boolean, default: false, description: "Set by a human reviewer; the composition refuses to build anything until true"}
+            status:
+              type: object
+              properties:
+                namespace: {type: string}

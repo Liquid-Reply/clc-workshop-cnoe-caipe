@@ -1,0 +1,16 @@
+.DS_Store
+.env
+*.tar
+docs/Workshop-CFP.pdf
+.run/
+.cache/
+__pycache__/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+bootstrap/images.lock.tmp

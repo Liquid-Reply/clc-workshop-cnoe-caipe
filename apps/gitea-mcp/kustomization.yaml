@@ -1,0 +1,6 @@
+# configMapGenerator hashes the name, so editing server.py in Git rolls the Deployment (ArgoCD renders kustomize natively)
+resources: [deploy.yaml]
+configMapGenerator:
+  - name: gitea-mcp-code
+    namespace: mcp-servers
+    files: [server.py]

@@ -1,0 +1,92 @@
+# CAIPE chart 1.2.0 values for the workshop (namespace "caipe", release "caipe").
+# Secrets are NOT here: bootstrap/up.sh creates llm-secret, caipe-ui-secret and
+# caipe-platform-secret, and passes the Keycloak admin password with --set.
+# Public URLs are localhost because bootstrap/forward.sh port-forwards the UI (3000)
+# and Keycloak (7080); the browser issuer must equal the issuer the services validate.
+tags:
+  caipe-ui: true
+  dynamic-agents: true
+  keycloak: true
+global:
+  llmSecrets:
+    secretName: llm-secret
+  openfga:
+    httpUrl: "http://caipe-openfga:8080"
+    storeName: "caipe-openfga"
+  agentgateway:
+    enabled: true
+    proxyPort: 8080
+    static:
+      configBridge:
+        ui:
+          existingSecret:
+            name: caipe-ui-secret
+    extAuth:
+      enabled: true
+      serviceName: "caipe-openfga-authz-bridge"
+      serviceNamespace: "caipe"
+      port: 9100
+dynamic-agents:
+  llmSecret: llm-secret
+  agentContext:
+    existingSecret:
+      name: caipe-ui-secret
+  config:
+    # ponytail: chart-default Mongo root creds, cluster-internal only, no persistence
+    MONGODB_URI: "mongodb://admin:changeme@caipe-mongodb:27017/caipe?authSource=admin"
+    OIDC_ISSUER: "http://localhost:7080/realms/caipe"
+    KEYCLOAK_JWKS_URL: "http://caipe-keycloak:8080/realms/caipe/protocol/openid-connect/certs"
+    KEYCLOAK_URL: "http://caipe-keycloak:8080"
+    KEYCLOAK_REALM: "caipe"
+    USE_IMPERSONATION_TOKENS: "true" # forward the caller JWT to MCP servers (knowledge-base 401s without it)
+    INGESTOR_OIDC_CLIENT_SECRET: "caipe-platform-dev-secret" # public dev-realm default; used to mint a service token when no user JWT is available
+keycloak:
+  admin:
+    username: "admin"
+  realm:
+    sslRequired: "none"
+  env:
+    KC_HOSTNAME: "http://localhost:7080"
+    KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+openfga:
+  enabled: true
+  init:
+    enabled: true
+    storeName: "caipe-openfga"
+openfgaAuthzBridge:
+  enabled: true
+openfga-authz-bridge:
+  openfga:
+    httpUrl: "http://caipe-openfga:8080"
+    storeName: "caipe-openfga"
+  tokenValidation:
+    jwksUrl: "http://caipe-keycloak:8080/realms/caipe/protocol/openid-connect/certs"
+    algorithms: [RS256]
+    issuer: "http://localhost:7080/realms/caipe"
+  agentContext:
+    existingSecret:
+      name: caipe-ui-secret
+agentgateway:
+  enabled: true
+caipe-ui:
+  existingSecret: caipe-ui-secret
+  mongodb:
+    enabled: true
+    persistence:
+      enabled: false
+  config:
+    OPENFGA_HTTP: "http://caipe-openfga:8080"
+    OPENFGA_STORE_NAME: "caipe-openfga"
+    OPENFGA_RECONCILE_ENABLED: "true"
+    BOOTSTRAP_ADMIN_EMAILS: "admin@caipe.local"
+    SSO_ENABLED: "true"
+    OIDC_ACCEPTED_AUDIENCES: "caipe-platform,caipe-ui,agentgateway"
+    NEXTAUTH_URL: "http://localhost:3000"
+    OIDC_ISSUER: "http://localhost:7080/realms/caipe"
+    OIDC_DISCOVERY_URL: "http://caipe-keycloak:8080/realms/caipe"
+    MONGODB_URI: "mongodb://admin:changeme@caipe-mongodb:27017/caipe?authSource=admin"
+    MONGODB_DATABASE: "caipe"
+    KEYCLOAK_URL: "http://caipe-keycloak:8080"
+    KEYCLOAK_REALM: "caipe"
+    USE_IMPERSONATION_TOKENS: "true" # forward the caller JWT to MCP servers (knowledge-base 401s without it)
+    KEYCLOAK_RESOURCE_SERVER_ID: "caipe-platform"

@@ -1,0 +1,10 @@
+# Argo CD (upstream chart) for the laptop: TLS ends at agentgateway, no SSO, no notifications.
+configs:
+  params:
+    server.insecure: true # plain HTTP behind the gateway; the CLI needs --grpc-web
+  cm:
+    timeout.reconciliation: 60s # no Gitea webhook: merged PRs reach the cluster within a minute
+dex:
+  enabled: false
+notifications:
+  enabled: false

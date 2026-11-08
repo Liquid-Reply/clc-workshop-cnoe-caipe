@@ -1,0 +1,53 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata: {name: teamenvironment}
+spec:
+  compositeTypeRef: {apiVersion: platform.workshop.io/v1alpha1, kind: TeamEnvironment}
+  mode: Pipeline
+  pipeline:
+    - step: render
+      functionRef: {name: function-go-templating}
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- $xr := .observed.composite.resource -}}
+            {{- $ns := printf "team-%s" $xr.spec.team -}}
+            {{- $q := dict "small" (dict "cpu" "2" "memory" "4Gi" "pods" "20") "medium" (dict "cpu" "4" "memory" "8Gi" "pods" "40") "large" (dict "cpu" "8" "memory" "16Gi" "pods" "80") -}}
+            {{- $t := get $q ($xr.spec.tier | default "small") -}}
+            {{- if $xr.spec.reviewed_and_approved }}
+            ---
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: {{ $ns }}
+              labels: {platform.workshop.io/team: {{ $xr.spec.team }}}
+              annotations: {gotemplating.fn.crossplane.io/composition-resource-name: namespace, gotemplating.fn.crossplane.io/ready: "True"}
+            ---
+            apiVersion: v1
+            kind: ResourceQuota
+            metadata:
+              name: team-quota
+              namespace: {{ $ns }}
+              annotations: {gotemplating.fn.crossplane.io/composition-resource-name: quota, gotemplating.fn.crossplane.io/ready: "True"}
+            spec:
+              hard: {limits.cpu: "{{ $t.cpu }}", limits.memory: {{ $t.memory }}, pods: "{{ $t.pods }}"}
+            ---
+            apiVersion: v1
+            kind: LimitRange
+            metadata:
+              name: default-limits
+              namespace: {{ $ns }}
+              annotations: {gotemplating.fn.crossplane.io/composition-resource-name: limits, gotemplating.fn.crossplane.io/ready: "True"}
+            spec:
+              limits:
+                - type: Container
+                  default: {cpu: 250m, memory: 256Mi}
+                  defaultRequest: {cpu: 50m, memory: 64Mi}
+            ---
+            apiVersion: platform.workshop.io/v1alpha1
+            kind: TeamEnvironment
+            status: {namespace: {{ $ns }}}
+            {{- end }}

@@ -1,0 +1,36 @@
+# Full workshop run on Linux amd64: cold up.sh, then the headless smoke test including Module 5 guardrails.
+# Manual only (needs the model proxy). Needs repository secrets LITELLM_URL (ending in /v1) and LITELLM_API_KEY.
+# The stack needs 12 GB for Docker: a standard private-repo runner (7 GB) fails preflight on purpose. Set the repository
+# variable E2E_RUNNER to a larger runner label (16 GB) in that case.
+name: linux-amd64
+on: workflow_dispatch
+jobs:
+  e2e:
+    runs-on: ${{ vars.E2E_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 60
+    env:
+      LITELLM_URL: ${{ secrets.LITELLM_URL }}
+      LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools (kind, kubectl, helm) and kernel limits
+        run: |
+          set -eu
+          mkdir -p ~/.local/bin && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          source bootstrap/versions.env
+          curl -fsSLo ~/.local/bin/kind "https://kind.sigs.k8s.io/dl/$KIND_VERSION/kind-linux-amd64" && chmod +x ~/.local/bin/kind
+          curl -fsSLo ~/.local/bin/kubectl "https://dl.k8s.io/release/${KIND_NODE_IMAGE#*:}/bin/linux/amd64/kubectl" && chmod +x ~/.local/bin/kubectl
+          curl -fsSL https://get.helm.sh/helm-v4.2.3-linux-amd64.tar.gz | tar xz -C /tmp && mv /tmp/linux-amd64/helm ~/.local/bin/
+          sudo sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=524288
+      - name: Pre-flight
+        run: ./bootstrap/preflight.sh
+      - name: Cold install
+        run: s=$(date +%s); ./bootstrap/up.sh; echo "up.sh took $(( $(date +%s)-s )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test with guardrails
+        run: ./bootstrap/smoke.sh --guardrails
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -A | grep -v -E 'Running|Completed' || true
+          kubectl get applications -n argocd || true
+          kubectl logs deploy/caipe-dynamic-agents -n caipe --tail=80 || true

@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source bootstrap/versions.env
-LITELLM_MODEL="${LITELLM_MODEL:-claude-haiku-4-5}" # ponytail: CAIPE sends temperature=0; Claude 5.x and the retired sonnet-4-6 fail on this proxy, only Haiku 4.5 works
+LITELLM_MODEL="${LITELLM_MODEL:-claude-5.5-haiku}" # Claude 5.x rejects temperature=0 (CAIPE's default), so llm-secret sets OPENAI_TEMPERATURE=1
 log() { printf '\033[1m==> %s\033[0m\n' "$*"; }
 die() { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
@@ -107,7 +107,7 @@ ensure_secret() { # name, then key=value args; key=@gen means random hex
 # LLM secret always refreshed (key/model may change between runs)
 # values go through a pipe (--from-env-file), not argv, so the key never shows up in `ps`
 kubectl create secret generic llm-secret -n "$NAMESPACE" --from-env-file=<(printf '%s\n' \
-  LLM_PROVIDER=openai "OPENAI_API_KEY=$LITELLM_API_KEY" "OPENAI_ENDPOINT=$LITELLM_URL" "OPENAI_API_BASE=$LITELLM_URL" "OPENAI_BASE_URL=$LITELLM_URL" "OPENAI_MODEL_NAME=$LITELLM_MODEL") \
+  LLM_PROVIDER=openai "OPENAI_API_KEY=$LITELLM_API_KEY" "OPENAI_ENDPOINT=$LITELLM_URL" "OPENAI_API_BASE=$LITELLM_URL" "OPENAI_BASE_URL=$LITELLM_URL" "OPENAI_MODEL_NAME=$LITELLM_MODEL" OPENAI_TEMPERATURE=1) \
   --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 ensure_secret caipe-platform-secret OIDC_CLIENT_SECRET=@gen
 ensure_secret caipe-ui-secret NEXTAUTH_SECRET=@gen OIDC_CLIENT_ID=caipe-ui OIDC_CLIENT_SECRET=caipe-ui-dev-secret \

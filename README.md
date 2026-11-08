@@ -84,7 +84,7 @@ Gitea and ArgoCD use a self-signed certificate: accept the browser warning.
 ```bash
 export LITELLM_URL=https://<your-endpoint>/v1   # your own OpenAI-compatible endpoint (BYOP); must end in /v1
 export LITELLM_API_KEY=<your key>
-export LITELLM_MODEL=claude-haiku-4-5           # must accept temperature=0; the only model verified end to end
+export LITELLM_MODEL=claude-5.5-haiku           # must accept temperature=1; the only model verified end to end
 ./bootstrap/up.sh        # build or repair the whole stack (safe to re-run)
 ./bootstrap/forward.sh   # leave running: UI on :3000, Keycloak on :7080
 ./bootstrap/down.sh      # delete the cluster

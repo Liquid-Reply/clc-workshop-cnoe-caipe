@@ -26,11 +26,11 @@ if until_ok 300 apps_ready; then ok "ArgoCD: 5 apps Synced and Healthy"
 else bad "ArgoCD apps not ready: $(kubectl get applications -n argocd --no-headers -o custom-columns=N:.metadata.name,S:.status.sync.status,H:.status.health.status | tr '\n' ';')"; fi
 
 if [ -n "${LITELLM_URL:-}" ] && [ -n "${LITELLM_API_KEY:-}" ]; then
-  model="${LITELLM_MODEL:-claude-haiku-4-5}"
-  # temperature=0 on purpose: CAIPE sends it, and some models on the proxy reject it
+  model="${LITELLM_MODEL:-claude-5.5-haiku}"
+  # temperature=1 on purpose: CAIPE sends it (OPENAI_TEMPERATURE in llm-secret); Claude 5.x rejects 0
   out=$(curl -s -m 60 "${LITELLM_URL%/}/chat/completions" -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
-    -d "{\"model\":\"$model\",\"temperature\":0,\"max_tokens\":16,\"messages\":[{\"role\":\"user\",\"content\":\"Say ok\"}]}")
-  if echo "$out" | python3 -c "import sys,json;sys.exit(0 if json.load(sys.stdin).get('choices') else 1)" 2>/dev/null; then ok "model call ($model, temperature=0)"
+    -d "{\"model\":\"$model\",\"temperature\":1,\"max_tokens\":16,\"messages\":[{\"role\":\"user\",\"content\":\"Say ok\"}]}")
+  if echo "$out" | python3 -c "import sys,json;sys.exit(0 if json.load(sys.stdin).get('choices') else 1)" 2>/dev/null; then ok "model call ($model, temperature=1)"
   else bad "model call failed: $(echo "$out" | cut -c1-200)"; fi
 else
   echo "  - model call skipped (LITELLM_URL / LITELLM_API_KEY not set)"

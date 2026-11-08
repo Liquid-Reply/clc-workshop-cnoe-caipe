@@ -113,7 +113,7 @@ esac
 
 # --- model proxy ---------------------------------------------------------------------------------------------------
 if [ -n "${LITELLM_URL:-}" ] && [ -n "${LITELLM_API_KEY:-}" ]; then
-  want="${LITELLM_MODEL:-claude-haiku-4-5}"
+  want="${LITELLM_MODEL:-claude-5.5-haiku}"
   tmp=$(mktemp)
   code=$(curl -s -m 15 -o "$tmp" -w '%{http_code}' -H "Authorization: Bearer $LITELLM_API_KEY" "${LITELLM_URL%/}/models")
   if [ "$code" != 200 ]; then bad "model proxy answered HTTP $code on ${LITELLM_URL%/}/models (URL must end in /v1; check the key)"

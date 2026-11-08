@@ -12,7 +12,7 @@ jobs:
       LITELLM_URL: ${{ secrets.LITELLM_URL }}
       LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Tools (kind, kubectl, helm) and kernel limits
         run: |
           set -eu

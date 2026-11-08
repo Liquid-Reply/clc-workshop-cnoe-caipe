@@ -29,7 +29,7 @@ Stragglers without network: load the tarball you were handed instead of pulling.
 ```bash
 export LITELLM_URL=https://<your-endpoint>/v1     # your own provider (BYOP); must end in /v1
 export LITELLM_API_KEY=<your key>
-export LITELLM_MODEL=claude-haiku-4-5             # must accept temperature=0
+export LITELLM_MODEL=claude-5.5-haiku             # must accept temperature=1
 ./bootstrap/up.sh                                  # ~6 min with images pre-pulled, ~12 min without; safe to re-run
 ```
 
@@ -71,7 +71,7 @@ A reply means the whole chain works: browser -> CAIPE -> your endpoint -> model.
 | `up.sh` stops at pre-flight | Read the lines marked `x`: each one says how to fix it (`docs/platform-setup.md`) |
 | Login says invalid username or password | Re-copy the password (see above); if Keycloak restarted its users are gone: `./bootstrap/users.sh` |
 | Pods stuck `ContainerCreating` for minutes | Slow image pulls: wait, or `./bootstrap/prepull.sh --load images.tar` |
-| Smoke test fails with a 400 about the model | Your endpoint does not serve that model or it rejects `temperature=0` (default is `claude-haiku-4-5`); check the name with `curl $LITELLM_URL/models -H "Authorization: Bearer $LITELLM_API_KEY"`, then `LITELLM_MODEL=<name> ./bootstrap/up.sh` |
+| Smoke test fails with a 400 about the model | Your endpoint does not serve that model or it rejects `temperature=1` (default is `claude-5.5-haiku`); check the name with `curl $LITELLM_URL/models -H "Authorization: Bearer $LITELLM_API_KEY"`, then `LITELLM_MODEL=<name> ./bootstrap/up.sh` |
 | UI or Keycloak page stops loading after you re-ran `up.sh` | Pods were replaced; `forward.sh` reconnects by itself within a few seconds, or restart it |
 | Anything else | Re-run `./bootstrap/up.sh`; it is idempotent |
 

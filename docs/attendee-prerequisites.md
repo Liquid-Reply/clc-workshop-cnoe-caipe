@@ -31,26 +31,26 @@ macOS on Apple silicon is tested end to end; other platforms use the same multi-
 
 ## AI provider: bring your own (BYOP)
 
-Attendees bring their own model access, and the model must accept `temperature=0`: CAIPE 1.2.0 always sends it, and Claude 5.x and `claude-sonnet-4-6` reject it. The only model verified end to end is `claude-haiku-4-5`.
+Attendees bring their own model access, and the model must accept `temperature=1`: `up.sh` makes CAIPE send it (`OPENAI_TEMPERATURE=1`), because Claude 5.x rejects CAIPE's default of 0. The only model verified end to end is `claude-5.5-haiku`.
 
 | You need | Detail |
 | --- | --- |
 | Endpoint | An OpenAI-compatible Chat Completions API; base URL ending in `/v1`, set as `LITELLM_URL` |
 | API key | For that endpoint, set as `LITELLM_API_KEY` |
-| Model | Supports tool calling and accepts `temperature=0`, set as `LITELLM_MODEL` (default `claude-haiku-4-5`) |
+| Model | Supports tool calling and accepts `temperature=1`, set as `LITELLM_MODEL` (default `claude-5.5-haiku`) |
 | Budget | Usage is billed to the attendee's own account; set a spend limit |
 
-- **Tested path:** a LiteLLM proxy (your own or your company's) in front of Anthropic, serving `claude-haiku-4-5`.
+- **Tested path:** a LiteLLM proxy (your own or your company's) in front of Anthropic, serving `claude-5.5-haiku`.
 - **Other OpenAI-compatible endpoints** (OpenAI, other providers, a local model server): may work, not tested. A local model also competes for the laptop's RAM.
 - **A native, non-OpenAI API key alone does not work:** CAIPE talks the OpenAI API format only; put a LiteLLM proxy in front of it.
 - **What is sent:** chat prompts plus what the agents read from the local cluster (metrics, logs and runbooks of a sample app) go to the attendee's provider. Follow your employer's AI policy.
 
-Test the provider at home, before the day. A reply containing `choices` means the model accepts `temperature=0`:
+Test the provider at home, before the day. A reply containing `choices` means the model accepts `temperature=1`:
 
 ```bash
-export LITELLM_URL=https://<your-endpoint>/v1 LITELLM_API_KEY=<your-key> LITELLM_MODEL=claude-haiku-4-5
+export LITELLM_URL=https://<your-endpoint>/v1 LITELLM_API_KEY=<your-key> LITELLM_MODEL=claude-5.5-haiku
 curl -s "$LITELLM_URL/chat/completions" -H "Authorization: Bearer $LITELLM_API_KEY" -H 'Content-Type: application/json' \
-  -d "{\"model\":\"$LITELLM_MODEL\",\"temperature\":0,\"max_tokens\":16,\"messages\":[{\"role\":\"user\",\"content\":\"Say ok\"}]}"
+  -d "{\"model\":\"$LITELLM_MODEL\",\"temperature\":1,\"max_tokens\":16,\"messages\":[{\"role\":\"user\",\"content\":\"Say ok\"}]}"
 ```
 
 With the three variables set, `./bootstrap/preflight.sh` also checks that the endpoint lists the model.

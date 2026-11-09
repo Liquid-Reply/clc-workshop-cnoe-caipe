@@ -76,6 +76,17 @@ echo '127.0.0.1 litellm' | sudo tee -a /etc/hosts
 export LITELLM_URL=http://litellm:4000/v1 LITELLM_API_KEY=sk-workshop LITELLM_MODEL=claude-5.5-haiku
 ```
 
+**Only an OpenRouter key?** One key covers both models. Use [`docs/litellm-openrouter.yaml`](litellm-openrouter.yaml) and
+replace the two `-e` provider keys with `--env-file` (a file holding `OPENROUTER_API_KEY=sk-or-...`):
+
+```bash
+docker run -d --name litellm --restart unless-stopped --network kind -p 127.0.0.1:4000:4000 \
+  -v "$PWD/docs/litellm-openrouter.yaml:/app/config.yaml:ro" --env-file ~/.openrouter.env -e LITELLM_MASTER_KEY=sk-workshop \
+  docker.io/litellm/litellm:v1.83.14-stable.patch.3 --config /app/config.yaml
+```
+
+The rest (hosts line, the three `export`s) is the same. The chat model is Claude Haiku 4.5 on OpenRouter, served under the name `claude-5.5-haiku`.
+
 Then run the two test calls above. Run the commands from the repository root (the volume path is relative). The
 container restarts with Docker; `./bootstrap/down.sh` does not remove it (`docker rm -f litellm` does).
 

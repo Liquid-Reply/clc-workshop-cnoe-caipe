@@ -87,7 +87,7 @@ jobs:
       - name: Validate manifests
         run: |
           git ls-files -z '*.yaml' '*.yml' \
-            ':!:**/kustomization.yaml' ':!:**/values.yaml' ':!:platform/caipe/*' ':!:.github/**' ':!:docs/litellm-local.yaml' \
+            ':!:**/kustomization.yaml' ':!:**/values.yaml' ':!:platform/caipe/*' ':!:.github/**' ':!:docs/litellm-*.yaml' \
             | xargs -0 kubeconform -strict -summary -ignore-missing-schemas
 
   # The only required status check on main. Add new jobs to `needs` so they gate merges.

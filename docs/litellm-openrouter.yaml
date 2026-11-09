@@ -1,0 +1,12 @@
+# Local LiteLLM proxy in front of OpenRouter (one key for chat and embeddings).
+model_list:
+  - model_name: claude-5.5-haiku        # the name the workshop asks for; served by Claude Haiku 4.5 on OpenRouter
+    litellm_params:
+      model: openrouter/anthropic/claude-haiku-4.5
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/openai/text-embedding-3-small   # OpenRouter speaks the OpenAI API: "openai/" = protocol, rest = OpenRouter model id
+      api_base: https://openrouter.ai/api/v1
+      api_key: os.environ/OPENROUTER_API_KEY
+      extra_body: {encoding_format: float}   # without it OpenRouter rejects the request (400 invalid encoding_format)

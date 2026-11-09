@@ -36,7 +36,7 @@ kubectl logs -n caipe deploy/caipe-openfga-authz-bridge --since=2m | grep DENY_A
 
 ## Beat 3: the human gate that cannot be argued with
 
-In hardened mode `main` is protected: one approval from someone other than the author, no direct pushes. Open any PR from `platform-bot` and try to merge it without approving: Gitea refuses, even for the admin. The bot cannot approve its own PR.
+In hardened mode `main` is protected: one approval from someone other than the author, no direct pushes. Open any PR from `platform-bot` and try to merge it without approving: Gitea will not merge it, even for the admin (the button becomes "schedule auto merge", which only waits for the missing approval; the PR stays open). The bot cannot approve its own PR. If you schedule it, cancel the auto merge afterwards, or a later approval merges it.
 
 ## What changed between soft and hardened
 

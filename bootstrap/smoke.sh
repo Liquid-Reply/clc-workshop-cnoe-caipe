@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Headless health check of a running workshop stack (no browser). Used by CI and for rehearsals on any laptop.
 #   ./bootstrap/smoke.sh               pods, ArgoCD apps, model call, MCP tools, Gitea
-#   ./bootstrap/smoke.sh --guardrails  also Module 5: soft mode ALLOWED, hardened mode DENIED, branch protection (leaves soft mode on)
+#   ./bootstrap/smoke.sh --guardrails  also Module 5: soft mode ALLOWED, hardened mode DENIED, branch protection (ends in the default state)
 # Needs LITELLM_URL / LITELLM_API_KEY for the model call (skipped with a note if unset).
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
@@ -67,7 +67,7 @@ if [ "${1:-}" = --guardrails ]; then
   if echo "$out" | grep -q 'DENIED.*403'; then ok "hardened: worst-case DENIED (403)"; else bad "hardened: worst-case not denied: $(echo "$out" | tail -2)"; fi
   kubectl logs -n caipe deploy/caipe-openfga-authz-bridge --since=3m 2>/dev/null | grep -q DENY_AGENT_TOOL && ok "audit log has DENY_AGENT_TOOL" || bad "no DENY_AGENT_TOOL audit line"
   gitea "$GITEA_API/branch_protections" | grep -q '"branch_name":"main"' && ok "main is branch-protected" || bad "main is not branch-protected"
-  modules/05-guardrails/mode.sh soft >/dev/null 2>&1   # back to the default state so apps.sh/up.sh can push to main
+  modules/05-guardrails/mode.sh default >/dev/null 2>&1   # back to what up.sh leaves: no extra Diagnostics grant, main unprotected
 fi
 
 echo

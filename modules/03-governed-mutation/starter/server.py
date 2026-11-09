@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import re
+import secrets
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -60,7 +61,8 @@ def open_pull_request(path: str, old_text: str, new_text: str, title: str, descr
     if False:
         diff = f"NEW FILE {path}:\n{new_text}" if create else f"--- {path}\n- {old_text}\n+ {new_text}"
         return f"DRY RUN, nothing changed. Show this to the user and ask for approval:\n{diff}"
-    branch = "agent/" + "".join(c if c.isalnum() else "-" for c in title.lower())[:40].strip("-")
+    # random suffix: titles that differ only after the cut, or a retried title, must not reuse a branch (Gitea 409)
+    branch = "agent/" + "".join(c if c.isalnum() else "-" for c in title.lower())[:40].strip("-") + "-" + secrets.token_hex(3)
     api("POST", f"/repos/{REPO}/branches", {"new_branch_name": branch, "old_branch_name": "main"})
     body = {"branch": branch, "message": title, "content": base64.b64encode((new_text if create else text.replace(old_text, new_text)).encode()).decode()}
     api("POST" if create else "PUT", f"/repos/{REPO}/contents/{path}", body if create else {**body, "sha": cur["sha"]})

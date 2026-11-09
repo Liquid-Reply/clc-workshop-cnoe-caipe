@@ -1,4 +1,4 @@
-# Workshop incident: `shop-api` burns ~20 ms of CPU per request but is limited to 100m, and `loadgen` sends ~8 req/s,
+# Workshop incident: `shop-api` burns ~20 ms of CPU per request but is limited to 100m, and `loadgen` sends ~11 req/s (a 0.07 s pause between requests; 0.1 s left the alert flapping at a ~50% throttle ratio on a fast amd64 VM),
 # so the container is throttled in nearly every period. The fix is a PR raising resources.limits.cpu.
 apiVersion: v1
 kind: Namespace
@@ -33,7 +33,7 @@ data:
             urllib.request.urlopen("http://shop-api:8080/", timeout=5).read()
         except Exception:
             time.sleep(1)
-        time.sleep(0.1)
+        time.sleep(0.07)
 ---
 apiVersion: apps/v1
 kind: Deployment

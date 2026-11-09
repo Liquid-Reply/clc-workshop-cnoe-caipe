@@ -137,8 +137,9 @@ docker exec "$CLUSTER_NAME-control-plane" crictl images 2>/dev/null | grep -q mc
 
 log "Crossplane $CROSSPLANE_CHART_VERSION"
 # empty repo config: a stale personal ~/.config/helm/repositories.yaml (repos never cached) otherwise breaks --repo installs
-HELM_REPOSITORY_CONFIG=/dev/null helm upgrade -i crossplane crossplane --repo https://charts.crossplane.io/stable --version "$CROSSPLANE_CHART_VERSION" \
-  -n crossplane-system --create-namespace --wait --timeout 5m >/dev/null
+# run from /tmp: the repo's crossplane/ directory would otherwise be taken as the local chart "crossplane" (helm 3 prefers a local path over --repo)
+(cd /tmp && HELM_REPOSITORY_CONFIG=/dev/null helm upgrade -i crossplane crossplane --repo https://charts.crossplane.io/stable --version "$CROSSPLANE_CHART_VERSION" \
+  -n crossplane-system --create-namespace --wait --timeout 5m >/dev/null)
 kubectl apply -f crossplane/function.yaml >/dev/null
 kubectl wait --for=condition=Healthy function/function-go-templating --timeout=300s >/dev/null
 kubectl apply -f crossplane/xrd.yaml >/dev/null

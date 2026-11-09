@@ -92,7 +92,6 @@ kubectl get resourcequota -n team-payments
 |---|---|
 | Agent says it created or changed a file, but there is no PR | It used the built-in `write_file` (scratch space, not Git). Tell it to use `open_pull_request` |
 | Agent invents a file path | Runbooks and prompts state the layout: manifests live at `<namespace>/app.yaml`. Tell it to `read_file sample-app/app.yaml` first |
-| Second PR with the same title fails | Branch names come from the title; use a different title |
 | `team-payments` is not created after 3 minutes | Click Refresh on the `environments` app in ArgoCD. Still nothing: the flag was `false` at merge time. Set it to true in a new commit on main (or another PR) |
 | ArgoCD shows `environments` OutOfSync | Click Refresh; it reads the whole `environments/` folder |
 

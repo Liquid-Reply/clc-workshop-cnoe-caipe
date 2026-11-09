@@ -1,4 +1,5 @@
 # Seed environment. Agents add more of these through pull requests (Module 3).
+# A human reviewer set reviewed_and_approved to true; agents always propose new files with false.
 apiVersion: platform.workshop.io/v1alpha1
 kind: TeamEnvironment
 metadata: {name: checkout}

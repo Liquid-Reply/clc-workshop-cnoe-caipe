@@ -49,6 +49,8 @@ kubectl get deploy shop-api -n sample-app -o jsonpath='{.spec.template.spec.cont
 
 **Done when:** the PR is merged, `shop-api` runs with the new limit, the alert has cleared and the commander reports the before/after numbers.
 
+The commander may still call it **not resolved**: with the runbook's 2-3x rule the new limit can leave 20-30% throttling. The alert clears (it fires above 50%), but the runbook's target is below 10%. That is not a failure of your lab; it is the second question below.
+
 ## Questions
 
 - Where exactly did a human sit in this loop, and what could they have caught?

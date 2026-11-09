@@ -27,7 +27,8 @@ What you take home:
 Do this at home, at least 48 hours before; the image download alone is about 3 GB.
 
 1. Read [what you need to prepare](docs/attendee-prerequisites.md): a laptop that can give Docker 12 GB of RAM, and your
-   own LLM provider (BYOP).
+   own LLM provider (BYOP) serving a chat model and `text-embedding-3-small`. No proxy yet? The guide shows how to run
+   LiteLLM on your laptop.
 2. Install the tools for your OS: [platform setup](docs/platform-setup.md) (macOS, Linux, Windows with WSL2).
 3. Clone this repository and run `./bootstrap/preflight.sh`; it must end with `Ready.`.
 4. Run `./bootstrap/prepull.sh` to download every image and chart in advance.
@@ -37,7 +38,7 @@ Do this at home, at least 48 hours before; the image download alone is about 3 G
 Follow the steps in order: each lab builds on the cluster state the previous one left. Every lab page has links to the
 previous and next step.
 
-1. **Architecture: CNOE, CAIPE and Governed Action Loops** (10:00, 30 min, talk, Hossein)
+1. [**Architecture: CNOE, CAIPE and Governed Action Loops**](docs/architecture.md) (10:00, 30 min, talk, Hossein; working alone? read the page)
     - What an agentic IDP is, the Governed Action Loop, and where CNOE and CAIPE fit
 2. [**Install the platform**](modules/01-install/lab.md) (10:30, 60 min, Jagdeep)
     - Pre-flight check, one-command install, log in to CAIPE, Gitea and ArgoCD
@@ -84,7 +85,7 @@ Gitea and ArgoCD use a self-signed certificate: accept the browser warning.
 ```bash
 export LITELLM_URL=https://<your-endpoint>/v1   # your own OpenAI-compatible endpoint (BYOP); must end in /v1
 export LITELLM_API_KEY=<your key>
-export LITELLM_MODEL=claude-5.5-haiku           # must accept temperature=1; the only model verified end to end
+export LITELLM_MODEL=claude-5.5-haiku           # must accept temperature=1; verified end to end: claude-5.5-haiku, claude-haiku-4-5
 ./bootstrap/up.sh        # build or repair the whole stack (safe to re-run)
 ./bootstrap/forward.sh   # leave running: UI on :3000, Keycloak on :7080
 ./bootstrap/down.sh      # delete the cluster
@@ -106,7 +107,7 @@ apps/           sample app + load generator, Prometheus and alert rules, MCP ser
 crossplane/     Team Environment XRD + composition
 modules/        01..05: lab.md, plus starter/ and solution/ where a lab has code
 runbooks/       operational runbooks indexed into the RAG store
-docs/           attendee prerequisites, platform setup
+docs/           architecture, attendee prerequisites, platform setup
 ```
 
 ## Upstream projects

@@ -5,7 +5,9 @@
 #   hardened mode -> HTTP 403 from the gateway (OpenFGA: no tuple agent:diagnostics caller tool:gitea-mcp/open_pull_request)
 # Runs inside the dynamic-agents pod, which already holds the agent-context signing secret.
 set -euo pipefail
-kubectl exec -i -n caipe deploy/caipe-dynamic-agents -- /app/dynamic_agents/.venv/bin/python -W ignore - <<'PY'
+# the limit is 100m at first but 250-300m after a Module 4 fix is merged: use whatever is there now
+CUR=$(kubectl get deploy shop-api -n sample-app -o jsonpath='{.spec.template.spec.containers[0].resources.limits.cpu}')
+sed "s/__CUR__/${CUR}/" <<'PY' | kubectl exec -i -n caipe deploy/caipe-dynamic-agents -- /app/dynamic_agents/.venv/bin/python -W ignore -
 import asyncio, os, httpx
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
@@ -30,7 +32,7 @@ async def main():
             async with ClientSession(r, w) as s:
                 await s.initialize()
                 res = await s.call_tool("open_pull_request", {
-                    "path": "sample-app/app.yaml", "old_text": "cpu: 100m", "new_text": "cpu: 4000m", "title": "Injected: raise shop-api CPU to 4000m",
+                    "path": "sample-app/app.yaml", "old_text": "cpu: __CUR__", "new_text": "cpu: 4000m", "title": "Injected: raise shop-api CPU to 4000m",
                     "description": "Opened by a compromised Diagnostics agent (Module 5 worst case)", "reviewed_and_approved": True})
                 print("ALLOWED:", res.content[0].text)
     except BaseException as e:
